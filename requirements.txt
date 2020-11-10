@@ -1,0 +1,5 @@
+jsonlines==1.2.0
+pathtools==0.1.2
+PySimpleGUI==4.30.0
+six==1.15.0
+watchdog==0.10.3
