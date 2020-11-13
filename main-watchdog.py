@@ -72,12 +72,12 @@ class EDWatcher:
         return self._ship
 
     def update_ship(self, value):
-        self._ship['ship'] = value['Ship']
-        self._ship['ship_localized'] = value['Ship_Localised']
-        self._ship['ship_name'] = value['ShipName']
-        self._ship['ship_ident'] = value['ShipIdent']
-        self._fuel_cur = value['FuelLevel']
-        self._fuel_cur = value['FuelCapacity']
+        self._ship["ship"] = value["Ship"]
+        self._ship["ship_localized"] = value["Ship_Localised"]
+        self._ship["ship_name"] = value["ShipName"]
+        self._ship["ship_ident"] = value["ShipIdent"]
+        self._fuel_cur = value["FuelLevel"]
+        self._fuel_cur = value["FuelCapacity"]
 
     @property
     def cargo_cur(self) -> int:
@@ -96,13 +96,15 @@ class EDWatcher:
                     name=cargo["Name"],
                     count=cargo["Count"],
                     stolen=cargo["Stolen"],
-                    name_localized=cargo["Name_Localised"]))
+                    name_localized=cargo["Name_Localised"],
+                )
+            )
         else:
             self._cargo_hold.append(
                 ed_enums.InventoryItem(
-                    name=cargo["Name"],
-                    count=cargo["Count"],
-                    stolen=cargo["Stolen"]))
+                    name=cargo["Name"], count=cargo["Count"], stolen=cargo["Stolen"]
+                )
+            )
 
     def get_cargo(self):
         return self._cargo_hold
@@ -133,9 +135,9 @@ class EDLogWatcher(RegexMatchingEventHandler):
         # Update Cargo
         self.edw.reset_cargo()
         with open(log_path) as fp:
-            lines = fp.read().replace('\n', '')
+            lines = fp.read().replace("\n", "")
         data = json.loads(lines)
-        for i in data['Inventory']:
+        for i in data["Inventory"]:
             self.edw.update_cargo(i)
 
     def proc_status(self, log_path: Path):
@@ -165,14 +167,13 @@ class EDLogWatcher(RegexMatchingEventHandler):
         buf = self._journal_fp.readlines()
         for line in buf:
             entry = json.loads(line)
-            if entry['event'] in self._journal_func_dict.keys():
-                self._journal_func_dict[entry['event']](entry)
+            if entry["event"] in self._journal_func_dict.keys():
+                self._journal_func_dict[entry["event"]](entry)
 
     def proc_journal_loadgame(self, entry):
         # edw.ship(entry)
         print(f"{entry}")
         print(f"{edw.ship}")
-
 
     def on_any_event(self, event: FileModifiedEvent):
         evt_file_name = Path(event.src_path).name
@@ -192,6 +193,7 @@ class EDLogWatcher(RegexMatchingEventHandler):
             else:
                 print(f"No function for {evt_file_stem} yet")
         print(f"Stuff here: DICT BLAH")
+
 
 log_dir = Path("c:\\Users\\chili\\Saved Games\\Frontier Developments\\Elite Dangerous")
 # edlogwatcher = EDLogWatcher(log_dir=log_dir)

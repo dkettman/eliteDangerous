@@ -2,18 +2,15 @@ import json
 import logging
 import os
 import re
-
-from edsession import (
-    ed_enums,
-    classes
-)
-
 from pathlib import Path
+
 from watchdog.events import (
     FileModifiedEvent,
     RegexMatchingEventHandler,
 )
 from watchdog.observers import Observer
+
+from edsession import ed_enums
 
 
 class EDWatcher:
@@ -76,12 +73,12 @@ class EDWatcher:
         return self._ship
 
     def update_ship(self, value):
-        self._ship['ship'] = value['Ship']
-        self._ship['ship_localized'] = value['Ship_Localised']
-        self._ship['ship_name'] = value['ShipName']
-        self._ship['ship_ident'] = value['ShipIdent']
-        self._fuel_cur = value['FuelLevel']
-        self._fuel_cur = value['FuelCapacity']
+        self._ship["ship"] = value["Ship"]
+        self._ship["ship_localized"] = value["Ship_Localised"]
+        self._ship["ship_name"] = value["ShipName"]
+        self._ship["ship_ident"] = value["ShipIdent"]
+        self._fuel_cur = value["FuelLevel"]
+        self._fuel_cur = value["FuelCapacity"]
 
     @property
     def cargo_cur(self) -> int:
@@ -100,13 +97,15 @@ class EDWatcher:
                     name=cargo["Name"],
                     count=cargo["Count"],
                     stolen=cargo["Stolen"],
-                    name_localized=cargo["Name_Localised"]))
+                    name_localized=cargo["Name_Localised"],
+                )
+            )
         else:
             self._cargo_hold.append(
                 ed_enums.InventoryItem(
-                    name=cargo["Name"],
-                    count=cargo["Count"],
-                    stolen=cargo["Stolen"]))
+                    name=cargo["Name"], count=cargo["Count"], stolen=cargo["Stolen"]
+                )
+            )
 
     def get_cargo(self):
         return self._cargo_hold
@@ -137,9 +136,9 @@ class EDLogWatcher(RegexMatchingEventHandler):
         # Update Cargo
         self.edw.reset_cargo()
         with open(log_path) as fp:
-            lines = fp.read().replace('\n', '')
+            lines = fp.read().replace("\n", "")
         data = json.loads(lines)
-        for i in data['Inventory']:
+        for i in data["Inventory"]:
             self.edw.update_cargo(i)
 
     def proc_status(self, log_path: Path):
@@ -169,8 +168,8 @@ class EDLogWatcher(RegexMatchingEventHandler):
         buf = self._journal_fp.readlines()
         for line in buf:
             entry = json.loads(line)
-            if entry['event'] in self._journal_func_dict.keys():
-                self._journal_func_dict[entry['event']](entry)
+            if entry["event"] in self._journal_func_dict.keys():
+                self._journal_func_dict[entry["event"]](entry)
 
     def proc_journal_loadgame(self, entry):
         # edw.ship(entry)
@@ -185,7 +184,9 @@ class EDLogWatcher(RegexMatchingEventHandler):
             logging.info(f"{evt_file_stem} - Truncated!")
             # pass
         else:
-            logging.info(f"{evt_file_stem} is now {evt_file_size} bytes. -- {evt_file_stem}")
+            logging.info(
+                f"{evt_file_stem} is now {evt_file_size} bytes. -- {evt_file_stem}"
+            )
             if evt_file_stem in self._func_dict:
                 # noinspection PyArgumentList
                 self._func_dict[evt_file_stem](event.src_path)
