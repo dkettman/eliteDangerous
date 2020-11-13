@@ -200,7 +200,7 @@ class EDLogWatcher(RegexMatchingEventHandler):
 
 logging.basicConfig(level=logging.DEBUG)
 
-log_dir = Path("c:\\Users\\chili\\Saved Games\\Frontier Developments\\Elite Dangerous")
+log_dir = Path("~\\Saved Games\\Frontier Developments\\Elite Dangerous").expanduser()
 logging.info(f"Log Path: {log_dir}")
 # edlogwatcher = EDLogWatcher(log_dir=log_dir)
 edw = EDWatcher()
