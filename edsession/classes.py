@@ -1,5 +1,7 @@
 from typing import List, Optional, Type
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from edsession import ed_enums
 
 
 def to_camel(string: str) -> str:
@@ -12,37 +14,41 @@ class BaseEvent(BaseModel):
         allow_population_by_field_name = True
 
 
-class Session(BaseEvent):
-    commander: str = None
-    credits: int = 0
-    ship: "Ship" = None
-
-
 class Cargo(BaseEvent):
     name: str
-    name_localised: str = None
+    name_localised: str = Field(None, alias='Name_Localised')
     count: int
     stolen: bool
-    mission_id: int = None
+    mission_id: Optional[int]
+
+
+class Module(BaseEvent):
+    item: str
+    on: bool
+    priority: Optional[int]
+    slot: str
+    ammo_in_clip: Optional[int]
+    ammo_in_hopper: Optional[int]
+    health: int
 
 
 class Ship(BaseEvent):
-    ship: str = None
-    ship_localised: str = None
-    ship_name: str = None
-    ship_ident: str = None
-    fuel_capacity: float = None
-    fuel_level: float = None
-    inventory: Optional[List[Type[Cargo]]] = []
+    ship: Optional[str]
+    ship_localised: Optional[str]
+    ship_name: Optional[str]
+    ship_ident: Optional[str]
+    fuel_capacity: Optional[dict]
+    fuel_level: Optional[float]
+    inventory: Optional[List[Cargo]] = []
+    status: Optional[dict]
+    modules: Optional[List[Module]] = []
+    # pips: Optional[List[ed_enums.SystemPips.power_pips]]
+
+
+class Session(BaseEvent):
+    commander: Optional[str]
+    credits: Optional[int]
+    ship: Ship = Ship()
 
 
 Session.update_forward_refs()
-
-
-# s = Session(
-#     commander="Me",
-#     credits=100,
-#     ship=Ship.parse_raw(
-#         """{ "timestamp":"2020-11-12T14:16:11Z", "event":"LoadGame", "FID":"F4640506", "Commander":"Watch_Me_Be_Meh", "Horizons":true, "Ship":"DiamondBackXL", "Ship_Localised":"Diamondback Explorer", "ShipID":9, "ShipName":"HIPPITY HOP", "ShipIdent":"BOING", "FuelLevel":39.973835, "FuelCapacity":40.000000, "GameMode":"Solo", "Credits":281233277, "Loan":0 }"""
-#     ),
-# )
