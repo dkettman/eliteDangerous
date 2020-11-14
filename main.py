@@ -11,21 +11,23 @@ from watchdog.events import (
 )
 from watchdog.observers import Observer
 
-from edsession import ed_enums, classes
+from edsession import (
+    ed_enums,
+    classes,
+)
 
 
 class EDLogWatcher(RegexMatchingEventHandler):
     def __init__(self, edw: classes.Session, *args, **kwargs):
-        # def __init__(self, edw: EDWatcher, *args, **kwargs):
-super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._func_dict = {
             "EVENT_TYPE_CREATED": self.on_any_event,
-            #"EVENT_TYPE_DELETED": self.on_any_event,
             "EVENT_TYPE_MODIFIED": self.on_any_event,
-            #"EVENT_TYPE_MOVED": self.on_any_event,
             "Status": self.proc_status,
             "Cargo": self.proc_cargo,
             "Market": self.proc_market,
+            # "EVENT_TYPE_DELETED": self.on_any_event,
+            # "EVENT_TYPE_MOVED": self.on_any_event,
         }
         self._journal_func_dict = {
             "LoadGame": self.proc_journal_loadgame,
@@ -57,6 +59,7 @@ super().__init__(*args, **kwargs)
             lines = fp.readlines()
         # There should only ever be one line in this file, so this will grab that single line.
         data = json.loads(lines[0])
+        # logging.debug(f"proc_status: {data}")
         flags = {}
         for flag in sf:
             is_set = bool(flag & data["Flags"])
@@ -65,7 +68,7 @@ super().__init__(*args, **kwargs)
         self.edw.ship.status = flags
         pips = data.get("Pips", [0, 0, 0])
         self.edw.ship.pips = pips
-        self.edw.ship.fuel_level = data['Fuel']['FuelMain']
+        # self.edw.ship.fuel_level = data['Fuel']['FuelMain']
 
     def proc_journal(self, log_path: Path):
         # Initially, the file pointer for the Journal hasn't been
