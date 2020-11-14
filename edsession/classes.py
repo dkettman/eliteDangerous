@@ -31,9 +31,10 @@ class Module(BaseEvent):
     ammo_in_hopper: Optional[int]
     health: int
 
+
 class Ship(BaseEvent):
     ship: Optional[str]
-    ship_localised: Optional[str]
+    ship_localised: str = Field(None, alias='Ship_Localised')
     ship_name: Optional[str]
     ship_ident: Optional[str]
     fuel_capacity: Optional[dict]
