@@ -94,7 +94,7 @@ class EDLogWatcher(RegexMatchingEventHandler):
         self.edw.ship.ship_localised = entry["Ship_Localised"]
         self.edw.ship.ship_name = entry["ShipName"]
         self.edw.ship.ship_ident = entry["ShipIdent"]
-        logging.debug(f"derp: {self.edw.ship.ship_localised}")
+        # logging.debug(f"derp: {self.edw.ship.ship_localised}")
 
     def proc_journal_loadout(self, entry):
         logging.debug(f"Loadout Entry: {entry}")
