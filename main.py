@@ -138,7 +138,7 @@ class EDLogWatcher(RegexMatchingEventHandler):
 
     def proc_cargo(self, log_path: Path):
         logging.debug(f"proc_cargo entered")
-        with open(log_path) as fp:
+        with open(log_path, encoding='utf-8') as fp:
             lines = fp.read().replace("\n", "")
         data = json.loads(lines)
         logging.info(f"Cargo Data: {data}")
@@ -151,7 +151,7 @@ class EDLogWatcher(RegexMatchingEventHandler):
 
     def proc_status(self, log_path: Path):
         sf = ed_enums.StatusFlag
-        with open(log_path) as fp:
+        with open(log_path, encoding='utf-8') as fp:
             lines = fp.readlines()
         # There should only ever be one line in this file, so this will grab that single line.
         data = json.loads(lines[0])
@@ -160,17 +160,16 @@ class EDLogWatcher(RegexMatchingEventHandler):
             is_set = bool(flag & data["Flags"])
             if is_set:
                 flags[flag] = {is_set}
-        self.edw.set_status_flags(flags)
+        self.edw.ship.status = flags
         pips = data.get("Pips", [0, 0, 0])
-        self.edw.set_pip("sys", pips[0])
-        self.edw.set_pip("eng", pips[1])
-        self.edw.set_pip("wep", pips[2])
+        self.edw.ship.pips = pips
+        self.edw.ship.fuel_level = data['Fuel']['FuelMain']
 
     def proc_journal(self, log_path: Path):
         # Initially, the file pointer for the Journal hasn't been
         # opened yet, so we need to open it and process it
         if self._journal_fp == "":
-            self._journal_fp = open(log_path, "r")
+            self._journal_fp = open(log_path, "r", encoding='utf-8')
 
         # Now to process all of the lines in the log file
         buf = self._journal_fp.readlines()
@@ -183,7 +182,10 @@ class EDLogWatcher(RegexMatchingEventHandler):
         logging.debug(f"Loadgame Entry: {entry}")
         self.edw.commander = entry['Commander']
         self.edw.credits = entry['Credits']
-        # self.edw.ship = classes.Ship.parse_obj(entry)
+        self.edw.ship.ship = entry['Ship']
+        self.edw.ship.ship_localised = entry['Ship_Localised']
+        self.edw.ship.ship_name = entry['ShipName']
+        self.edw.ship.ship_ident = entry['ShipIdent']
 
     def proc_journal_loadout(self, entry):
         logging.debug(f"Loadout Entry: {entry}")
@@ -209,7 +211,7 @@ class EDLogWatcher(RegexMatchingEventHandler):
                 self.proc_journal(event.src_path)
             else:
                 logging.warning(f"No function for {evt_file_stem} yet")
-        pprint(self.edw.dict(), indent=4, depth=2)
+        pprint(self.edw.dict(), indent=4)
 
 
 logging.basicConfig(level=logging.INFO)

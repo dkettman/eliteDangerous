@@ -31,7 +31,6 @@ class Module(BaseEvent):
     ammo_in_hopper: Optional[int]
     health: int
 
-
 class Ship(BaseEvent):
     ship: Optional[str]
     ship_localised: Optional[str]
@@ -42,7 +41,7 @@ class Ship(BaseEvent):
     inventory: Optional[List[Cargo]] = []
     status: Optional[dict]
     modules: Optional[List[Module]] = []
-    # pips: Optional[List[ed_enums.SystemPips.power_pips]]
+    pips: Optional[List[int]]
 
 
 class Session(BaseEvent):
