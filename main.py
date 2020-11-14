@@ -16,6 +16,8 @@ from edsession import (
     classes,
 )
 
+import PySimpleGUI as sg
+
 
 class EDLogWatcher(RegexMatchingEventHandler):
     def __init__(self, edw: classes.Session, *args, **kwargs):
@@ -42,12 +44,12 @@ class EDLogWatcher(RegexMatchingEventHandler):
 
     def proc_cargo(self, log_path: Path):
         logging.debug(f"proc_cargo entered")
-        with open(log_path, encoding='utf-8') as fp:
+        with open(log_path, encoding="utf-8") as fp:
             lines = fp.read().replace("\n", "")
         data = json.loads(lines)
         logging.info(f"Cargo Data: {data}")
         self.edw.ship.inventory = []
-        for i in data['Inventory']:
+        for i in data["Inventory"]:
             self.edw.ship.inventory.append(classes.Cargo.parse_obj(i))
         # for i in data["Inventory"]:
         #     self.edw.update_cargo(i)
@@ -55,7 +57,7 @@ class EDLogWatcher(RegexMatchingEventHandler):
 
     def proc_status(self, log_path: Path):
         sf = ed_enums.StatusFlag
-        with open(log_path, encoding='utf-8') as fp:
+        with open(log_path, encoding="utf-8") as fp:
             lines = fp.readlines()
         # There should only ever be one line in this file, so this will grab that single line.
         data = json.loads(lines[0])
@@ -74,7 +76,7 @@ class EDLogWatcher(RegexMatchingEventHandler):
         # Initially, the file pointer for the Journal hasn't been
         # opened yet, so we need to open it and process it
         if self._journal_fp == "":
-            self._journal_fp = open(log_path, "r", encoding='utf-8')
+            self._journal_fp = open(log_path, "r", encoding="utf-8")
 
         # Now to process all of the lines in the log file
         buf = self._journal_fp.readlines()
@@ -85,12 +87,14 @@ class EDLogWatcher(RegexMatchingEventHandler):
 
     def proc_journal_loadgame(self, entry):
         logging.debug(f"Loadgame Entry: {entry}")
-        self.edw.commander = entry['Commander']
-        self.edw.credits = entry['Credits']
-        self.edw.ship.ship = entry['Ship']
-        self.edw.ship.ship_localised = entry['Ship_Localised']
-        self.edw.ship.ship_name = entry['ShipName']
-        self.edw.ship.ship_ident = entry['ShipIdent']
+        logging.debug(f"Ship_Localised: {entry['Ship_Localised']}")
+        self.edw.commander = entry["Commander"]
+        self.edw.credits = entry["Credits"]
+        self.edw.ship.ship = entry["Ship"]
+        self.edw.ship.ship_localised = entry["Ship_Localised"]
+        self.edw.ship.ship_name = entry["ShipName"]
+        self.edw.ship.ship_ident = entry["ShipIdent"]
+        logging.debug(f"derp: {self.edw.ship.ship_localised}")
 
     def proc_journal_loadout(self, entry):
         logging.debug(f"Loadout Entry: {entry}")
@@ -117,9 +121,37 @@ class EDLogWatcher(RegexMatchingEventHandler):
             else:
                 logging.warning(f"No function for {evt_file_stem} yet")
         pprint(self.edw.dict(), indent=4)
+        self.update_gui()
+
+    def update_gui(self):
+        window["commander"].update(f"{self.edw.commander}")
+        window["credits"].update(f"{self.edw.credits}")
+        window["ship_name"].update(
+            f"{self.edw.ship.ship_name} - {self.edw.ship.ship_ident}"
+        )
+        window["ship_type"].update(f"{self.edw.ship.ship_localised}")
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
+
+# Setting up window
+# sg.theme('DarkAmber')
+
+layout = [
+    [
+        sg.Text("Commander Name:"),
+        sg.Text("Waiting for data...", key="commander", size=(20, 1)),
+        sg.Text("Credits:"),
+        sg.Text(key="credits", size=(20, 1)),
+    ],
+    [
+        sg.Text("Ship Name:"),
+        sg.Text(key="ship_name", size=(40, 1)),
+        sg.Text("Ship Type:"),
+        sg.Text(key="ship_type", size=(40, 1)),
+    ],
+    [sg.OK()],
+]
 
 log_dir = Path("~\\Saved Games\\Frontier Developments\\Elite Dangerous").expanduser()
 logging.info(f"Log Path: {log_dir}")
@@ -132,5 +164,11 @@ observer = Observer()
 observer.schedule(edlogwatcher, str(log_dir))
 logging.debug("Starting Observer...")
 observer.start()
-observer.join()
+
+window = sg.Window("Elite: Dangerous Log Watcher", layout)
+evt, val = window.read()
+
+# observer.join()
 logging.debug("Observer stopped")
+
+window.close()
