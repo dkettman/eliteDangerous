@@ -94,7 +94,7 @@ class EDLogWatcher(RegexMatchingEventHandler):
 
     def proc_journal_loadout(self, entry):
         logging.debug(f"Loadout Entry: {entry}")
-        self.edw.ship = self.edw.ship.parse_obj(entry)
+        self.edw.ship = self.edw.ship.copy(update=entry)
         self._loadout_entry = entry
 
     def on_any_event(self, event: FileModifiedEvent):
