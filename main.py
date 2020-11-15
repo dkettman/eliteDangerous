@@ -86,15 +86,7 @@ class EDLogWatcher(RegexMatchingEventHandler):
                 self._journal_func_dict[entry["event"]](entry)
 
     def proc_journal_loadgame(self, entry):
-        logging.debug(f"Loadgame Entry: {entry}")
-        logging.debug(f"Ship_Localised: {entry['Ship_Localised']}")
-        self.edw.commander = entry["Commander"]
-        self.edw.credits = entry["Credits"]
-        self.edw.ship.ship = entry["Ship"]
-        self.edw.ship.ship_localised = entry["Ship_Localised"]
-        self.edw.ship.ship_name = entry["ShipName"]
-        self.edw.ship.ship_ident = entry["ShipIdent"]
-        # logging.debug(f"derp: {self.edw.ship.ship_localised}")
+        self.edw.update_journal_loadgame(entry)
 
     def proc_journal_loadout(self, entry):
         logging.debug(f"Loadout Entry: {entry}")
@@ -120,7 +112,7 @@ class EDLogWatcher(RegexMatchingEventHandler):
                 self.proc_journal(event.src_path)
             else:
                 logging.warning(f"No function for {evt_file_stem} yet")
-        pprint(self.edw.dict(), indent=4)
+        # pprint(self.edw.dict(), indent=4)
         self.update_gui()
 
     def update_gui(self):
@@ -135,20 +127,20 @@ class EDLogWatcher(RegexMatchingEventHandler):
 logging.basicConfig(level=logging.DEBUG)
 
 # Setting up window
-# sg.theme('DarkAmber')
+sg.theme('DarkAmber')
 
 layout = [
     [
         sg.Text("Commander Name:"),
         sg.Text("Waiting for data...", key="commander", size=(20, 1)),
-        sg.Text("Credits:"),
+        sg.Text("Credits:       "),
         sg.Text(key="credits", size=(20, 1)),
     ],
     [
-        sg.Text("Ship Name:"),
-        sg.Text(key="ship_name", size=(40, 1)),
-        sg.Text("Ship Type:"),
-        sg.Text(key="ship_type", size=(40, 1)),
+        sg.Text("Ship Name:     "),
+        sg.Text(key="ship_name", size=(20, 1)),
+        sg.Text("Ship Type:     "),
+        sg.Text(key="ship_type", size=(20, 1)),
     ],
     [sg.OK()],
 ]

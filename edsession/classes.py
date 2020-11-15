@@ -41,14 +41,24 @@ class Ship(BaseEvent):
     fuel_level: Optional[float]
     inventory: Optional[List[Cargo]] = []
     status: Optional[dict]
-    modules: Optional[List[Module]] = []
+    modules: Optional[List[Module]] = Field(default_factory=list)
     pips: Optional[List[int]]
+
+    def update_journal_loadgame(self, entry):
+        self.ship = entry["Ship"]
+        self.ship_localised = entry["Ship_Localised"]
+        self.ship_name = entry["ShipName"]
+        self.ship_ident = entry["ShipIdent"]
 
 
 class Session(BaseEvent):
     commander: Optional[str]
     credits: Optional[int]
-    ship: Ship = Ship()
+    ship: Ship = Field(default_factory=Ship)
+
+    def update_journal_loadgame(self,entry):
+        self.commander = entry["Commander"]
+        self.credits = entry["Credits"]
+        self.ship.update_journal_loadgame(entry)
 
 
-Session.update_forward_refs()
