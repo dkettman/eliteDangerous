@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from pprint import pprint
 
+from PySimpleGUI import Column
 from watchdog.events import (
     FileModifiedEvent,
     RegexMatchingEventHandler,
@@ -53,24 +54,28 @@ class EDLogWatcher(RegexMatchingEventHandler):
             self.edw.ship.inventory.append(classes.Cargo.parse_obj(i))
         # for i in data["Inventory"]:
         #     self.edw.update_cargo(i)
-        logging.info(f"Ship Cargo: {self.edw.ship.inventory}")
+        # logging.info(f"Ship Cargo: {self.edw.ship.inventory}")
+        self.edw.cargo_as_matrix()
 
     def proc_status(self, log_path: Path):
         sf = ed_enums.StatusFlag
         with open(log_path, encoding="utf-8") as fp:
             lines = fp.readlines()
+
         # There should only ever be one line in this file, so this will grab that single line.
         data = json.loads(lines[0])
-        # logging.debug(f"proc_status: {data}")
         flags = {}
+
         for flag in sf:
             is_set = bool(flag & data["Flags"])
             if is_set:
                 flags[flag] = {is_set}
+
         self.edw.ship.status = flags
         pips = data.get("Pips", [0, 0, 0])
         self.edw.ship.pips = pips
-        # self.edw.ship.fuel_level = data['Fuel']['FuelMain']
+        if "Fuel" in data.keys():
+            self.edw.ship.fuel_level = data["Fuel"]["FuelMain"]
 
     def proc_journal(self, log_path: Path):
         # Initially, the file pointer for the Journal hasn't been
@@ -122,28 +127,11 @@ class EDLogWatcher(RegexMatchingEventHandler):
             f"{self.edw.ship.ship_name} - {self.edw.ship.ship_ident}"
         )
         window["ship_type"].update(f"{self.edw.ship.ship_localised}")
+        window["table_inventory"].update(self.edw.cargo_as_matrix())
 
 
 logging.basicConfig(level=logging.DEBUG)
 
-# Setting up window
-sg.theme('DarkAmber')
-
-layout = [
-    [
-        sg.Text("Commander Name:"),
-        sg.Text("Waiting for data...", key="commander", size=(20, 1)),
-        sg.Text("Credits:       "),
-        sg.Text(key="credits", size=(20, 1)),
-    ],
-    [
-        sg.Text("Ship Name:     "),
-        sg.Text(key="ship_name", size=(20, 1)),
-        sg.Text("Ship Type:     "),
-        sg.Text(key="ship_type", size=(20, 1)),
-    ],
-    [sg.OK()],
-]
 
 log_dir = Path("~\\Saved Games\\Frontier Developments\\Elite Dangerous").expanduser()
 logging.info(f"Log Path: {log_dir}")
@@ -157,7 +145,71 @@ observer.schedule(edlogwatcher, str(log_dir))
 logging.debug("Starting Observer...")
 observer.start()
 
-window = sg.Window("Elite: Dangerous Log Watcher", layout)
+# Setting up window
+sg.theme("DarkAmber")
+
+frame_loadout = [[sg.T("This is the Loadout Tab")]]
+
+# frame_inventory = [[sg.T("This is the Inventory Tab")]]
+
+table_inventory_headers = ["Name", "Count", "Stolen"]
+
+frame_inventory = [
+    [
+        sg.Table(
+            values=[["", str(0), str(False)]],
+            headings=table_inventory_headers,
+            key="table_inventory",
+            num_rows=10,
+            size=(400, 20),
+        )
+    ]
+]
+
+
+tab_loadout = sg.Tab("Loadout", frame_loadout)
+tab_inventory = sg.Tab("Inventory", frame_inventory)
+
+layout = [
+    [
+        sg.Column(
+            [
+                [
+                    sg.Text("Commander Name:"),
+                    sg.Text("Waiting for data...", key="commander", size=(20, 1)),
+                ]
+            ],
+            justification="left",
+        ),
+        sg.Column(
+            [[sg.Text("Credits:"), sg.Text(key="credits", size=(10, 1))]],
+            justification="right",
+        ),
+    ],
+    [
+        sg.Column(
+            [
+                [
+                    sg.Text("Ship Name:"),
+                    sg.Text(key="ship_name", size=(20, 1)),
+                    sg.Text(key="ship_type", size=(20, 1)),
+                ]
+            ],
+            justification="center",
+        ),
+    ],
+    [
+        sg.pin(sg.Column(
+            [[sg.TabGroup([[tab_inventory, tab_loadout]], key="_TAB_GROUP_")]],
+        )),
+    ],
+    [
+        sg.OK(),
+    ],
+]
+
+window = sg.Window("Elite: Dangerous Log Watcher", layout, grab_anywhere=True)
+
 evt, val = window.read()
 
 # observer.join()

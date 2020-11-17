@@ -16,10 +16,16 @@ class BaseEvent(BaseModel):
 
 class Cargo(BaseEvent):
     name: str
-    name_localised: str = Field(None, alias='Name_Localised')
+    name_localised: str = Field(None, alias="Name_Localised")
     count: int
     stolen: bool
     mission_id: Optional[int]
+
+    def to_matrix_row(self):
+        if self.name_localised is None:
+            return [self.name.capitalize(), self.count, self.stolen]
+        else:
+            return [self.name_localised, self.count, self.stolen]
 
 
 class Module(BaseEvent):
@@ -34,7 +40,7 @@ class Module(BaseEvent):
 
 class Ship(BaseEvent):
     ship: Optional[str]
-    ship_localised: str = Field(None, alias='Ship_Localised')
+    ship_localised: str = Field(None, alias="Ship_Localised")
     ship_name: Optional[str]
     ship_ident: Optional[str]
     fuel_capacity: Optional[dict]
@@ -56,9 +62,13 @@ class Session(BaseEvent):
     credits: Optional[int]
     ship: Ship = Field(default_factory=Ship)
 
-    def update_journal_loadgame(self,entry):
+    def update_journal_loadgame(self, entry):
         self.commander = entry["Commander"]
         self.credits = entry["Credits"]
         self.ship.update_journal_loadgame(entry)
 
-
+    # Used for PySimpleGUI to build the Inventory table matrix
+    def cargo_as_matrix(self):
+        matrix = ["Name", "Count", "Stolen"]
+        matrix.append([c.to_matrix_row() for c in self.ship.inventory])
+        return matrix
