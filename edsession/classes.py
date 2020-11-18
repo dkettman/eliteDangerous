@@ -30,6 +30,7 @@ class Module(BaseEvent):
     ammo_in_clip: Optional[int]
     ammo_in_hopper: Optional[int]
     health: int
+    engineering: Optional[dict]
 
 class Ship(BaseEvent):
     ship: Optional[str]
