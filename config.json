@@ -1,0 +1,14 @@
+{
+  "eddb_data": {
+    "commodities": {
+      "url": "https://eddb.io/archive/v6/commodities.json",
+      "filename": "commodities.json",
+      "data": {}
+    },
+    "modules": {
+      "url": "https://eddb.io/archive/v6/modules.json",
+      "filename": "modules.json",
+      "data": {}
+    }
+  }
+}

@@ -14,25 +14,25 @@ class BaseEvent(BaseModel):
 
     @root_validator
     def replace_name_with_localised(cls, values):
-        name_loc = values.get('name_localised')
+        name_loc = values.get("name_localised")
         if not name_loc:
             # values['name'] = values['name'].capitalize()
-            values['name'].capitalize()
+            values["name"].capitalize()
         else:
-            values['name'] = name_loc
+            values["name"] = name_loc
         return values
 
 
 class Cargo(BaseEvent):
     name: str
-    name_localised: str = Field(None, alias='Name_Localised')
+    name_localised: str = Field(None, alias="Name_Localised")
     count: int
     stolen: bool
     mission_id: Optional[int]
 
 
-data1 = {'name': 'gold', 'count': 3, 'stolen': False}
-data2 = {'name': 'iondrive', 'name_localised': 'Ion Drive', 'count': 3, 'stolen': False}
+data1 = {"name": "gold", "count": 3, "stolen": False}
+data2 = {"name": "iondrive", "name_localised": "Ion Drive", "count": 3, "stolen": False}
 
 
 class Module(BaseEvent):
