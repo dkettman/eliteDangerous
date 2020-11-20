@@ -18,7 +18,7 @@ from edsession import (
 
 
 class EDLogWatcher(RegexMatchingEventHandler):
-    def __init__(self, edw: classes.Session, *args, **kwargs):
+    def __init__(self, overseer: classes.Overseer, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._func_dict = {
             "EVENT_TYPE_CREATED": self.on_any_event,
@@ -33,7 +33,7 @@ class EDLogWatcher(RegexMatchingEventHandler):
             "LoadGame": self.proc_journal_loadgame,
             "Loadout": self.proc_journal_loadout,
         }
-        self.edw = edw
+        self.edw = overseer
         self._journal_fp = ""
 
     def proc_market(self, log_path: Path):
@@ -49,7 +49,7 @@ class EDLogWatcher(RegexMatchingEventHandler):
         for i in data["Inventory"]:
             self.edw.ship.inventory.append(classes.Cargo.parse_obj(i))
         # for i in data["Inventory"]:
-        #     self.edw.update_cargo(i)
+        #     self.overseer.update_cargo(i)
         logging.info(f"Ship Cargo: {self.edw.ship.inventory}")
 
     def proc_status(self, log_path: Path):
@@ -67,7 +67,7 @@ class EDLogWatcher(RegexMatchingEventHandler):
         self.edw.ship.status = flags
         pips = data.get("Pips", [0, 0, 0])
         self.edw.ship.pips = pips
-        # self.edw.ship.fuel_level = data['Fuel']['FuelMain']
+        # self.overseer.ship.fuel_level = data['Fuel']['FuelMain']
 
     def proc_journal(self, log_path: Path):
         # Initially, the file pointer for the Journal hasn't been
@@ -123,8 +123,8 @@ logging.basicConfig(level=logging.INFO)
 log_dir = Path("~\\Saved Games\\Frontier Developments\\Elite Dangerous").expanduser()
 logging.info(f"Log Path: {log_dir}")
 # edlogwatcher = EDLogWatcher(log_dir=log_dir)
-session = classes.Session()
-logging.debug(f"Startup Session Object: {session.dict()}")
+session = classes.Overseer()
+logging.debug(f"Startup Overseer Object: {session.dict()}")
 # noinspection SpellCheckingInspection
 edlogwatcher = EDLogWatcher(session, ignore_regexes=[r".*cache", r".*~", r".*sw[px]"])
 observer = Observer()

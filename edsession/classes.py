@@ -1,7 +1,6 @@
-from typing import List, Optional, Type
-from pydantic import BaseModel, Field
+from typing import List, Optional
 
-from edsession import ed_enums
+from pydantic import BaseModel, Field, validator, root_validator
 
 
 def to_camel(string: str) -> str:
@@ -13,6 +12,16 @@ class BaseEvent(BaseModel):
         alias_generator = to_camel
         allow_population_by_field_name = True
 
+    @root_validator
+    def replace_name_with_localised(cls, values):
+        name_loc = values.get('name_localised')
+        if not name_loc:
+            # values['name'] = values['name'].capitalize()
+            values['name'].capitalize()
+        else:
+            values['name'] = name_loc
+        return values
+
 
 class Cargo(BaseEvent):
     name: str
@@ -20,6 +29,10 @@ class Cargo(BaseEvent):
     count: int
     stolen: bool
     mission_id: Optional[int]
+
+
+data1 = {'name': 'gold', 'count': 3, 'stolen': False}
+data2 = {'name': 'iondrive', 'name_localised': 'Ion Drive', 'count': 3, 'stolen': False}
 
 
 class Module(BaseEvent):
@@ -31,6 +44,7 @@ class Module(BaseEvent):
     ammo_in_hopper: Optional[int]
     health: int
     engineering: Optional[dict]
+
 
 class Ship(BaseEvent):
     ship: Optional[str]
@@ -45,10 +59,10 @@ class Ship(BaseEvent):
     pips: Optional[List[int]]
 
 
-class Session(BaseEvent):
+class Overseer(BaseEvent):
     commander: Optional[str]
     credits: Optional[int]
     ship: Ship = Ship()
 
 
-Session.update_forward_refs()
+Overseer.update_forward_refs()
