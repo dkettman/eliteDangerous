@@ -4,3 +4,4 @@ PySimpleGUI==4.30.0
 six==1.15.0
 watchdog==0.10.3
 pydantic~=1.7.2
+requests~=2.24.0

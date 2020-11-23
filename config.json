@@ -1,13 +1,15 @@
 {
+  "log_path": "/Users/david.kettmann/PycharmProjects/eliteDangerous/Frontier Developments/Elite Dangerous",
+
   "eddb_data": {
     "commodities": {
-      "url": "https://eddb.io/archive/v6/commodities.json",
-      "filename": "commodities.json",
+      "type": "online",
+      "location": "https://eddb.io/archive/v6/commodities.json",
       "data": {}
     },
     "modules": {
-      "url": "https://eddb.io/archive/v6/modules.json",
-      "filename": "modules.json",
+      "type": "local",
+      "location": "./modules.json",
       "data": {}
     }
   }

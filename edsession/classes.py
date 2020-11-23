@@ -1,10 +1,63 @@
+import inspect
+import json
+import logging
+from pathlib import Path
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, validator, root_validator
+import requests
+from pydantic import BaseModel, Field
 
 
 def to_camel(string: str) -> str:
     return "".join(word.capitalize() for word in string.split("_"))
+
+
+def load_config():
+    logging.debug(f"Entered: {inspect.stack()[0][3]}")
+    with open("config.json") as fp:
+        cfg = json.load(fp)
+    for entry in cfg["eddb_data"].values():
+        update_remote_data(entry)
+
+    if cfg["log_path"] == "":
+        cfg['log_path'] = Path(
+            "~\\Saved Games\\Frontier Developments\\Elite Dangerous"
+        ).expanduser()
+
+    return cfg
+
+
+def update_remote_data(src_dict: dict):
+    valid_remote_types = ["online", "local"]
+    if src_dict["type"] == "online":
+        logging.debug(f'Getting Online Data for: {src_dict}')
+        src_dict["data"] = requests.get(src_dict["location"]).json()
+    elif src_dict["type"] == "local":
+        logging.debug(f'Getting Local Data for: {src_dict}')
+        with open(src_dict["location"]) as fp:
+            src_dict["data"] = json.load(fp)
+    else:
+        raise NotImplementedError(f"Remote Data type not implemented! Valid types are: {valid_remote_types}")
+
+
+def lookup_module(module: str):
+    module_lookup = {
+        x.get("ed_symbol").lower(): x for x in config["eddb_data"]["modules"]["data"]
+    }
+    return module_lookup[module.lower()]
+
+
+def lookup_commodities(commodity: str):
+    module_lookup = {
+        x.get("name"): x for x in config["eddb_data"]["commodities"]["data"]
+    }
+    return module_lookup[commodity]
+
+
+logging.basicConfig(level=logging.DEBUG)
+
+config = load_config()
+logging.debug(f"Log Path: {config['log_path']}")
 
 
 class BaseEvent(BaseModel):
@@ -12,15 +65,9 @@ class BaseEvent(BaseModel):
         alias_generator = to_camel
         allow_population_by_field_name = True
 
-    @root_validator
-    def replace_name_with_localised(cls, values):
-        name_loc = values.get("name_localised")
-        if not name_loc:
-            # values['name'] = values['name'].capitalize()
-            values["name"].capitalize()
-        else:
-            values["name"] = name_loc
-        return values
+    @property
+    def display_name(self):
+        raise NotImplementedError
 
 
 class Cargo(BaseEvent):
@@ -30,9 +77,9 @@ class Cargo(BaseEvent):
     stolen: bool
     mission_id: Optional[int]
 
-
-data1 = {"name": "gold", "count": 3, "stolen": False}
-data2 = {"name": "iondrive", "name_localised": "Ion Drive", "count": 3, "stolen": False}
+    @property
+    def display_name(self):
+        return self.name_localised or self.name.capitalize()
 
 
 class Module(BaseEvent):
@@ -44,6 +91,10 @@ class Module(BaseEvent):
     ammo_in_hopper: Optional[int]
     health: int
     engineering: Optional[dict]
+
+    @property
+    def display_name(self):
+        raise NotImplementedError
 
 
 class Ship(BaseEvent):
@@ -58,11 +109,18 @@ class Ship(BaseEvent):
     modules: Optional[List[Module]] = []
     pips: Optional[List[int]]
 
+    @property
+    def display_name(self):
+        raise NotImplementedError
+
 
 class Overseer(BaseEvent):
     commander: Optional[str]
     credits: Optional[int]
     ship: Ship = Ship()
+
+    def display_name(self):
+        return self.commander
 
 
 Overseer.update_forward_refs()
