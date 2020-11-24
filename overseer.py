@@ -79,7 +79,6 @@ class EDLogWatcher(RegexMatchingEventHandler):
     def proc_journal_loadout(self, entry):
         self.overseer.ship = self.overseer.ship.copy(update=entry)
         self.overseer.ship.update_modules(entry["Modules"])
-        # pprint.pprint(self.overseer.dict())
 
     def proc_journal_materials(self, entry):
         self.overseer.ship.update_materials(entry)
@@ -101,3 +100,6 @@ class EDLogWatcher(RegexMatchingEventHandler):
                 self.proc_journal(event.src_path)
             else:
                 logging.warning(f"No function for {evt_file_stem} yet")
+
+    def update_ui(self):
+        pass

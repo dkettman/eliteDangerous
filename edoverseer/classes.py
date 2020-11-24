@@ -78,7 +78,29 @@ class Ship(BasicModel):
 
     @property
     def display_name(self):
-        raise NotImplementedError
+        return f'{self.ship_name} [{self.ship_ident}]'
+
+    @property
+    def display_materials(self) -> list:
+        return self.materials
+
+    @property
+    def display_materials_by_type(self) -> dict:
+        ret = {}
+        for t in self.get_material_types():
+            ret[t] = []
+            for m in self.get_materials_of_type(t):
+                ret[t].append(m)
+        return ret
+
+    def get_material_types(self) -> list:
+        types = set()
+        for m in self.materials:
+            types.add(m.type)
+        return list(types)
+
+    def get_materials_of_type(self, t: str) -> list:
+        return [x for x in self.materials if x.type == t.lower()]
 
     def update_modules(self, modules: dict):
         new_modules = list()
@@ -103,7 +125,7 @@ class Ship(BasicModel):
         material_types = ["Raw", "Manufactured", "Encoded"]
         for mt in material_types:
             for m in materials[mt]:
-                m["type"] = mt
+                m["type"] = mt.lower()
                 new_materials.append(Material.parse_obj(m))
         self.materials = new_materials
 
