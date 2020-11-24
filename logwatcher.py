@@ -1,12 +1,13 @@
 import json
 import logging
 import os
+import pprint
 import re
 from pathlib import Path
 
 from watchdog.events import RegexMatchingEventHandler, FileModifiedEvent
 
-from edsession import classes, ed_enums
+from edoverseer import classes, ed_enums
 
 
 class EDLogWatcher(RegexMatchingEventHandler):
@@ -15,9 +16,9 @@ class EDLogWatcher(RegexMatchingEventHandler):
         self._func_dict = {
             "EVENT_TYPE_CREATED": self.on_any_event,
             "EVENT_TYPE_MODIFIED": self.on_any_event,
-            "Status": self.proc_status,
-            "Cargo": self.proc_cargo,
-            "Market": self.proc_market,
+            # "Status": self.proc_status,
+            # "Cargo": self.proc_cargo,
+            # "Market": self.proc_market,
             # "EVENT_TYPE_DELETED": self.on_any_event,
             # "EVENT_TYPE_MOVED": self.on_any_event,
         }
@@ -25,7 +26,7 @@ class EDLogWatcher(RegexMatchingEventHandler):
             "LoadGame": self.proc_journal_loadgame,
             "Loadout": self.proc_journal_loadout,
         }
-        self.edw = overseer
+        self.overseer = overseer
         self._journal_fp = ""
 
     def proc_market(self, log_path: Path):
@@ -35,11 +36,9 @@ class EDLogWatcher(RegexMatchingEventHandler):
         with open(log_path, encoding="utf-8") as fp:
             lines = fp.read().replace("\n", "")
         data = json.loads(lines)
-        self.edw.ship.inventory = []
+        self.overseer.ship.inventory = []
         for i in data["Inventory"]:
-            self.edw.ship.inventory.append(classes.Cargo.parse_obj(i))
-        # for i in data["Inventory"]:
-        #     self.overseer.update_cargo(i)
+            self.overseer.ship.inventory.append(classes.Cargo.parse_obj(i))
 
     def proc_status(self, log_path: Path):
         sf = ed_enums.StatusFlag
@@ -52,10 +51,9 @@ class EDLogWatcher(RegexMatchingEventHandler):
             is_set = bool(flag & data["Flags"])
             if is_set:
                 flags[flag] = {is_set}
-        self.edw.ship.status = flags
+        self.overseer.ship.status = flags
         pips = data.get("Pips", [0, 0, 0])
-        self.edw.ship.pips = pips
-        # self.overseer.ship.fuel_level = data['Fuel']['FuelMain']
+        self.overseer.ship.pips = pips
 
     def proc_journal(self, log_path: Path):
         # Initially, the file pointer for the Journal hasn't been
@@ -71,19 +69,20 @@ class EDLogWatcher(RegexMatchingEventHandler):
                 self._journal_func_dict[entry["event"]](entry)
 
     def proc_journal_loadgame(self, entry):
-        self.edw.commander = entry["Commander"]
-        self.edw.credits = entry["Credits"]
-        self.edw.ship.ship = entry["Ship"]
-        self.edw.ship.ship_localised = entry["Ship_Localised"]
-        self.edw.ship.ship_name = entry["ShipName"]
-        self.edw.ship.ship_ident = entry["ShipIdent"]
+        self.overseer.commander = entry["Commander"]
+        self.overseer.credits = entry["Credits"]
+        self.overseer.ship.ship = entry["Ship"]
+        self.overseer.ship.ship_localised = entry["Ship_Localised"]
+        self.overseer.ship.ship_name = entry["ShipName"]
+        self.overseer.ship.ship_ident = entry["ShipIdent"]
 
     def proc_journal_loadout(self, entry):
-        self.edw.ship = self.edw.ship.copy(update=entry)
-        self.edw.ship.modules = entry["Modules"]
+        self.overseer.ship = self.overseer.ship.copy(update=entry)
+        self.overseer.ship.update_modules(entry["Modules"])
+        pprint.pprint(self.overseer.dict())
 
     def on_any_event(self, event: FileModifiedEvent):
-        evt_file_name = Path(event.src_path).name
+        # evt_file_name = Path(event.src_path).name
         evt_file_stem = Path(event.src_path).stem
         evt_file_size = os.path.getsize(event.src_path)
         if evt_file_size == 0:
