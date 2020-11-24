@@ -6,7 +6,6 @@ from pydantic import BaseModel, Field
 
 import edoverseer.functions as edfuncs
 
-
 config = edfuncs.load_config()
 logging.basicConfig(level=logging.DEBUG)
 logging.debug(f"Log Path: {config['log_path']}")
@@ -22,12 +21,23 @@ class BaseEvent(BaseModel):
         raise NotImplementedError
 
 
-class Cargo(BaseEvent):
+class Item(BaseModel):
     name: str
     name_localised: str = Field(None, alias="Name_Localised")
     count: int
+
+    @property
+    def display_name(self):
+        return self.name_localised or self.name.capitalize()
+
+
+class Cargo(Item):
     stolen: bool
     mission_id: Optional[int]
+
+
+class Material(Item):
+    type: str
 
     @property
     def display_name(self):
@@ -66,6 +76,7 @@ class Ship(BaseEvent):
     inventory: Optional[List[Cargo]] = []
     status: Optional[dict]
     modules: Optional[List[Module]] = []
+    materials: Optional[List[Material]] = []
     pips: Optional[List[int]]
 
     @property
@@ -82,6 +93,15 @@ class Ship(BaseEvent):
                 new_modules.append(Module.parse_obj(mod))
                 pprint.pprint(mod)
         self.modules = new_modules
+
+    def update_materials(self, materials: dict):
+        new_materials = list()
+        for t in materials:
+            for m in t:
+                m['type'] = t
+                pprint.pprint(m)
+                new_materials.append(Material.parse_obj(m))
+        self.materials = new_materials
 
 
 class Overseer(BaseEvent):

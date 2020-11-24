@@ -79,7 +79,12 @@ class EDLogWatcher(RegexMatchingEventHandler):
     def proc_journal_loadout(self, entry):
         self.overseer.ship = self.overseer.ship.copy(update=entry)
         self.overseer.ship.update_modules(entry["Modules"])
-        pprint.pprint(self.overseer.dict())
+        # pprint.pprint(self.overseer.dict())
+
+    def proc_journal_materials(self, entry):
+        print(f'-=-=-=-=-=-=-=-=-=-MADE IT INTO PROC_JOURNAL_MATERIALS-=-=-=-=-=-=-=-=-=-')
+        self.overseer.ship.update_materials(entry)
+        pprint.pprint(self.overseer.materials.dict())
 
     def on_any_event(self, event: FileModifiedEvent):
         # evt_file_name = Path(event.src_path).name

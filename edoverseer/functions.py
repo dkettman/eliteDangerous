@@ -26,7 +26,7 @@ def load_config():
 
     if cfg["log_path"] == "":
         cfg['log_path'] = Path(
-            "~\\Saved Games\\Frontier Developments\\Elite Dangerous"
+            f'{Path.home()}/Saved Games/Frontier Developments/Elite Dangerous'
         ).expanduser()
 
     cfg['lookups'] = dict()
