@@ -1,5 +1,5 @@
 {
-  "log_path": "/Users/david.kettmann/PycharmProjects/eliteDangerous/Frontier Developments/Elite Dangerous",
+  "log_path": "",
 
   "eddb_data": {
     "commodities": {
@@ -8,8 +8,8 @@
       "data": {}
     },
     "modules": {
-      "type": "local",
-      "location": "./modules.json",
+      "type": "online",
+      "location": "https://eddb.io/archive/v6/modules.json",
       "data": {}
     }
   }

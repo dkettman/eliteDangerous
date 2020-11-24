@@ -9,6 +9,11 @@ from pydantic import BaseModel, Field
 
 
 def to_camel(string: str) -> str:
+    """
+
+    :param string:
+    :return:
+    """
     return "".join(word.capitalize() for word in string.split("_"))
 
 
@@ -24,7 +29,25 @@ def load_config():
             "~\\Saved Games\\Frontier Developments\\Elite Dangerous"
         ).expanduser()
 
+    cfg['lookups'] = dict()
+
+    cfg['lookups']['module'] = {
+        x.get("ed_symbol").lower(): x for x in cfg["eddb_data"]["modules"]["data"]
+    }
+
+    cfg['lookups']['commodity'] = {
+        x.get("name"): x for x in cfg["eddb_data"]["commodities"]["data"]
+    }
+
     return cfg
+
+
+def lookup_module(module:str):
+    return config['lookups']['module'][module]
+
+
+def lookup_commodity(commodity:str):
+    return config['lookups']['commodity'][commodity]
 
 
 def update_remote_data(src_dict: dict):
@@ -38,20 +61,6 @@ def update_remote_data(src_dict: dict):
             src_dict["data"] = json.load(fp)
     else:
         raise NotImplementedError(f"Remote Data type not implemented! Valid types are: {valid_remote_types}")
-
-
-def lookup_module(module: str):
-    module_lookup = {
-        x.get("ed_symbol").lower(): x for x in config["eddb_data"]["modules"]["data"]
-    }
-    return module_lookup[module.lower()]
-
-
-def lookup_commodities(commodity: str):
-    module_lookup = {
-        x.get("name"): x for x in config["eddb_data"]["commodities"]["data"]
-    }
-    return module_lookup[commodity]
 
 
 logging.basicConfig(level=logging.DEBUG)
