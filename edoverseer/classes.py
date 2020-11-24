@@ -1,5 +1,4 @@
 import logging
-import pprint
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
@@ -11,7 +10,7 @@ logging.basicConfig(level=logging.DEBUG)
 logging.debug(f"Log Path: {config['log_path']}")
 
 
-class BaseEvent(BaseModel):
+class BasicModel(BaseModel):
     class Config:
         alias_generator = edfuncs.to_camel
         allow_population_by_field_name = True
@@ -21,7 +20,7 @@ class BaseEvent(BaseModel):
         raise NotImplementedError
 
 
-class Item(BaseModel):
+class Item(BasicModel):
     name: str
     name_localised: str = Field(None, alias="Name_Localised")
     count: int
@@ -44,7 +43,7 @@ class Material(Item):
         return self.name_localised or self.name.capitalize()
 
 
-class Module(BaseEvent):
+class Module(BasicModel):
     name: str
     on: bool
     priority: Optional[int]
@@ -57,16 +56,14 @@ class Module(BaseEvent):
     engineering: Optional[dict]
 
     class Config:
-        fields = {
-            'class_': 'class'
-        }
+        fields = {"class_": "class"}
 
     @property
     def display_name(self):
         raise self.name.capitalize()
 
 
-class Ship(BaseEvent):
+class Ship(BasicModel):
     ship: Optional[str]
     ship_localised: Optional[str]
     ship_name: Optional[str]
@@ -85,26 +82,33 @@ class Ship(BaseEvent):
 
     def update_modules(self, modules: dict):
         new_modules = list()
-        ignore_slots = ['ShipCockpit', 'CargoHatch', 'PaintJob', 'Decal1', 'Decal2', 'Decal3', 'VesselVoice']
+        ignore_slots = [
+            "ShipCockpit",
+            "CargoHatch",
+            "PaintJob",
+            "Decal1",
+            "Decal2",
+            "Decal3",
+            "VesselVoice",
+        ]
         for m in modules:
-            if m['Slot'] not in ignore_slots:
-                lookup = edfuncs.lookup_module(m['Item'])
-                mod = {**m, **lookup, 'name': lookup['group']['name']}
+            if m["Slot"] not in ignore_slots:
+                lookup = edfuncs.lookup_module(m["Item"])
+                mod = {**m, **lookup, "name": lookup["group"]["name"]}
                 new_modules.append(Module.parse_obj(mod))
-                pprint.pprint(mod)
         self.modules = new_modules
 
     def update_materials(self, materials: dict):
         new_materials = list()
-        for t in materials:
-            for m in t:
-                m['type'] = t
-                pprint.pprint(m)
+        material_types = ["Raw", "Manufactured", "Encoded"]
+        for mt in material_types:
+            for m in materials[mt]:
+                m["type"] = mt
                 new_materials.append(Material.parse_obj(m))
         self.materials = new_materials
 
 
-class Overseer(BaseEvent):
+class Overseer(BasicModel):
     commander: Optional[str]
     credits: Optional[int]
     ship: Ship = Ship()

@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-import pprint
 import re
 from pathlib import Path
 
@@ -25,6 +24,7 @@ class EDLogWatcher(RegexMatchingEventHandler):
         self._journal_func_dict = {
             "LoadGame": self.proc_journal_loadgame,
             "Loadout": self.proc_journal_loadout,
+            "Materials": self.proc_journal_materials,
         }
         self.overseer = overseer
         self._journal_fp = ""
@@ -82,9 +82,7 @@ class EDLogWatcher(RegexMatchingEventHandler):
         # pprint.pprint(self.overseer.dict())
 
     def proc_journal_materials(self, entry):
-        print(f'-=-=-=-=-=-=-=-=-=-MADE IT INTO PROC_JOURNAL_MATERIALS-=-=-=-=-=-=-=-=-=-')
         self.overseer.ship.update_materials(entry)
-        pprint.pprint(self.overseer.materials.dict())
 
     def on_any_event(self, event: FileModifiedEvent):
         # evt_file_name = Path(event.src_path).name
@@ -99,7 +97,7 @@ class EDLogWatcher(RegexMatchingEventHandler):
             )
             if evt_file_stem in self._func_dict:
                 self._func_dict[evt_file_stem](event.src_path)
-            elif re.match(r"Journal.", str(evt_file_stem)):
+            elif re.match(r'Journal.', str(evt_file_stem)):
                 self.proc_journal(event.src_path)
             else:
                 logging.warning(f"No function for {evt_file_stem} yet")
