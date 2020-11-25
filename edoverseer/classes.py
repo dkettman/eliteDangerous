@@ -35,12 +35,38 @@ class Cargo(Item):
     mission_id: Optional[int]
 
 
-class Material(Item):
-    type: str
+class RawMaterial(Item):
+    def __repr__(self):
+        return f'RawMaterial: {self.display_name}'
+
+    def __str__(self):
+        return self.__repr__()
+
+
+class EncodedMaterial(Item):
+    def __repr__(self):
+        return f'EncodedMaterial: {self.display_name}'
+
+    def __str__(self):
+        return self.__repr__()
+
+
+class ManufacturedMaterial(Item):
+    def __repr__(self):
+        return f'ManufacturedMaterial: {self.display_name}'
+
+    def __str__(self):
+        return self.__repr__()
+
+
+class MaterialHold(BasicModel):
+    raw: List[RawMaterial] = Field(default_generator=list)
+    encoded: List[EncodedMaterial] = Field(default_generator=list)
+    manufactured: List[ManufacturedMaterial] = Field(default_generator=list)
 
     @property
     def display_name(self):
-        return self.name_localised or self.name.capitalize()
+        return f'MaterialHold(Raw: {len(self.raw)},Encoded: {len(self.encoded)}, Manufactured: {len(self.manufactured)}'
 
 
 class Module(BasicModel):
@@ -79,10 +105,6 @@ class Ship(BasicModel):
     @property
     def display_name(self):
         return f'{self.ship_name} [{self.ship_ident}]'
-
-    @property
-    def display_materials(self) -> list:
-        return self.materials
 
     @property
     def display_materials_by_type(self) -> dict:
